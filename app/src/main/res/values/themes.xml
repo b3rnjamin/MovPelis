@@ -13,4 +13,11 @@
         <item name="android:windowTranslucentStatus">true</item>
         <!-- Customize your theme here. -->
     </style>
+
+    <style name="TextAppearance.AppCompat.Headline3." parent="">
+        <item name="android:textSize">16sp</item>
+        <item name="android:alpha">0.6</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:maxLines">1</item>
+    </style>
 </resources>
