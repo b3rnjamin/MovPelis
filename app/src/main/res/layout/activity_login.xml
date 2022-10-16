@@ -35,7 +35,8 @@
         app:layout_constraintStart_toStartOf="@+id/gl_right"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_chainStyle="spread"
-        app:srcCompat="@drawable/ic_logo" />
+        app:srcCompat="@drawable/ic_logo"
+        android:contentDescription="@string/login_label_logo"/>
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/et_field_username"
