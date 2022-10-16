@@ -6,6 +6,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.brdx.movpelis.core.Resource
 import com.brdx.movpelis.core.RetrofitClient
+import com.brdx.movpelis.data.remote.login.LoginDataSourceImpl
 import com.brdx.movpelis.databinding.ActivityLoginBinding
 import com.brdx.movpelis.domain.login.LoginRepoImpl
 import com.brdx.movpelis.presentation.login.LoginViewModel
@@ -23,7 +24,9 @@ class LoginActivity : AppCompatActivity() {
     private val viewModel by viewModels<LoginViewModel> {
         LoginViewModelFactory(
             LoginRepoImpl(
-                RetrofitClient.webservice
+                LoginDataSourceImpl(
+                    RetrofitClient.webservice
+                )
             )
         )
     }
