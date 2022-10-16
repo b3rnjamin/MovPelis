@@ -5,4 +5,6 @@ import com.brdx.movpelis.data.model.Movie
 
 interface MovieRepo {
     suspend fun listMovies(page: Int): Resource<List<Movie>>
+    suspend fun listLocalMovies(): Resource<List<Movie>>
+    suspend fun saveMovie(movie: Movie)
 }

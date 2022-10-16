@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import com.brdx.movpelis.core.Resource
-import com.brdx.movpelis.domain.login.LoginRepo
 import com.brdx.movpelis.domain.main.MovieRepo
 import kotlinx.coroutines.Dispatchers
 
@@ -16,6 +15,16 @@ class MovieViewModel(private val repo: MovieRepo) : ViewModel() {
             emit(Resource.Loading())
             try {
                 emit(repo.listMovies(page))
+            } catch (e: Exception) {
+                emit(Resource.Failure(e))
+            }
+        }
+
+    fun listLocalMovies() =
+        liveData(viewModelScope.coroutineContext + Dispatchers.Main) {
+            emit(Resource.Loading())
+            try {
+                emit(repo.listLocalMovies())
             } catch (e: Exception) {
                 emit(Resource.Failure(e))
             }
