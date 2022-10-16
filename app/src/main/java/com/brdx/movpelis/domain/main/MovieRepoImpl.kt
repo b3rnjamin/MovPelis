@@ -23,7 +23,7 @@ class MovieRepoImpl(
             debugLog("#Network: page=$page")
             val response: JsonElement?
             try {
-                val responseBody = webService.getMovies(page, WebService.api_key).awaitResponse()
+                val responseBody = webService.getMovies(WebService.api_key, page).awaitResponse()
                 response = getBodyFromResponse(responseBody)
 
                 debugLog("getMovies: output: $response")
