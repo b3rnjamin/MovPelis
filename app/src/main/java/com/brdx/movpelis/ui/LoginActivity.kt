@@ -34,7 +34,7 @@ class LoginActivity : AppCompatActivity() {
 
 
         binding.btnActionLogin.setOnClickListener {
-            val user = binding.etFieldUsername.editText?.text.toString()
+            val user = binding.etFieldUsername.editText?.text.toString().trim()
             val password = binding.etFieldPassword.editText?.text.toString()
 
             if (user.isEmpty() || password.isEmpty()) {
