@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import com.brdx.movpelis.core.Resource
+import com.brdx.movpelis.data.model.Movie
 import com.brdx.movpelis.domain.main.MovieRepo
 import kotlinx.coroutines.Dispatchers
 
@@ -29,6 +30,17 @@ class MovieViewModel(private val repo: MovieRepo) : ViewModel() {
                 emit(Resource.Failure(e))
             }
         }
+
+    fun saveMovie(movie: Movie) =
+        liveData(viewModelScope.coroutineContext + Dispatchers.Main) {
+            emit(Resource.Loading())
+            try {
+                emit(Resource.Success(repo.saveMovie(movie)))
+            } catch (e: Exception) {
+                emit(Resource.Failure(e))
+            }
+        }
+
 }
 
 class MovieViewModelFactory(private val repo: MovieRepo) : ViewModelProvider.Factory {
