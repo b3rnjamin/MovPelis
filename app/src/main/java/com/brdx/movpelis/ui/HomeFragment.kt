@@ -9,6 +9,7 @@ import androidx.navigation.NavController
 import androidx.navigation.Navigation
 import androidx.recyclerview.widget.GridLayoutManager
 import com.brdx.movpelis.R
+import com.brdx.movpelis.core.PaginationScrollListener
 import com.brdx.movpelis.core.Resource
 import com.brdx.movpelis.core.RetrofitClient
 import com.brdx.movpelis.data.local.AppDataBase
@@ -34,6 +35,14 @@ class HomeFragment : Fragment(R.layout.fragment_home), MovieAdapter.OnMovieListe
     private lateinit var navController: NavController
 
     private val movieAdapter = MovieAdapter(this)
+    private var isLastPage = false
+    private var isLoading = false
+
+    private val startPage = 1
+    private var currentPage = startPage
+
+    private lateinit var movieLayoutManager: GridLayoutManager
+    private lateinit var onScrollListener : PaginationScrollListener
 
     private val viewModel by activityViewModels<MovieViewModel> {
         MovieViewModelFactory(
@@ -48,6 +57,9 @@ class HomeFragment : Fragment(R.layout.fragment_home), MovieAdapter.OnMovieListe
 
     private lateinit var connectivityObserver: ConnectivityObserver
 
+    private var isConnectionWithInternet = false
+
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         navController = Navigation.findNavController(view)
@@ -56,32 +68,56 @@ class HomeFragment : Fragment(R.layout.fragment_home), MovieAdapter.OnMovieListe
         connectivityObserver = NetworkConnectivityObserver(ctx)
         observeInternet()
 
+        movieLayoutManager = GridLayoutManager(context, 2)
+        onScrollListener = object : PaginationScrollListener(movieLayoutManager) {
+            override fun loadMoreItems() {
+                isLoading = true
+                currentPage += 1
+
+                if(isConnectionWithInternet){
+                    loadNextPage()
+                }else{
+                    movieAdapter.removeLoadingFooter()
+                }
+            }
+
+            override fun isLastPage(): Boolean = isLastPage
+            override fun isLoading(): Boolean = isLoading
+        }
+
         binding.rvMovies.apply {
-            layoutManager = GridLayoutManager(context, 2)
+            layoutManager = movieLayoutManager
             setHasFixedSize(true)
             adapter = movieAdapter
         }
+
     }
 
     private fun observeInternet() {
         connectivityObserver.observe().onEach { status ->
+
+            viewModel.liveDataMovies.value = emptyList()
+            currentPage = 1
+
             when (status) {
                 ConnectivityObserver.Status.Available -> {
+                    isConnectionWithInternet = true
                     observeMovies()
                 }
                 ConnectivityObserver.Status.Unavailable -> {
+                    isConnectionWithInternet = false
                     observeLocalMovies()
                 }
                 ConnectivityObserver.Status.Losing -> {
+                    isConnectionWithInternet = false
                     observeLocalMovies()
                 }
                 ConnectivityObserver.Status.Lost -> {
+                    isConnectionWithInternet = false
                     observeLocalMovies()
                 }
             }
         }.launchIn(viewLifecycleOwner.lifecycleScope)
-
-
     }
 
     private fun observeLocalMovies() {
@@ -94,6 +130,15 @@ class HomeFragment : Fragment(R.layout.fragment_home), MovieAdapter.OnMovieListe
                 is Resource.Success -> {
                     val movieList = resource.data
                     movieAdapter.setData(movieList)
+
+                    if (movieList.isEmpty()) {
+                        Snackbar.make(
+                            binding.root,
+                            "Don´t have movies in local storage",
+                            Snackbar.LENGTH_SHORT
+                        )
+                            .show()
+                    }
                 }
                 is Resource.Failure -> {
                     val exception = resource.exception
@@ -109,17 +154,27 @@ class HomeFragment : Fragment(R.layout.fragment_home), MovieAdapter.OnMovieListe
     }
 
     private fun observeMovies() {
-        viewModel.listMovies(1).observe(viewLifecycleOwner) { resource ->
+        viewModel.listMovies(currentPage).observe(viewLifecycleOwner) { resource ->
             when (resource) {
                 is Resource.Loading -> {
                     Snackbar.make(binding.root, "Loading from server...", Snackbar.LENGTH_SHORT)
                         .show()
+                    movieAdapter.addLoadingFooter()
                 }
                 is Resource.Success -> {
+                    movieAdapter.removeLoadingFooter()
+
+                    currentPage = 1
+
                     val movieList = resource.data
+                    viewModel.setDataMovies(movieList)
                     movieAdapter.setData(movieList)
+
+                    binding.rvMovies.addOnScrollListener(onScrollListener)
                 }
                 is Resource.Failure -> {
+                    movieAdapter.removeLoadingFooter()
+
                     val exception = resource.exception
                     Snackbar.make(
                         binding.root,
@@ -132,7 +187,45 @@ class HomeFragment : Fragment(R.layout.fragment_home), MovieAdapter.OnMovieListe
         }
     }
 
+    private fun loadNextPage() {
+        viewModel.listMovies(currentPage).observe(viewLifecycleOwner) { result ->
+            when (result) {
+                is Resource.Loading -> {
+                    movieAdapter.addLoadingFooter()
+                }
+                is Resource.Success -> {
+                    movieAdapter.removeLoadingFooter()
+
+                    val notifications =
+                        viewModel.liveDataMovies.value?.plus(result.data) ?: emptyList()
+                    viewModel.setDataMovies(notifications)
+
+                    isLastPage = result.data.isEmpty()
+
+                    if (isLastPage) {
+                        return@observe
+                    }
+
+                    isLoading = false
+                    movieAdapter.setData(notifications)
+                }
+                is Resource.Failure -> {
+                    movieAdapter.removeLoadingFooter()
+
+                    val exception = result.exception
+                    Snackbar.make(
+                        binding.root,
+                        (exception.message ?: "Error unexpected").toString(),
+                        Snackbar.LENGTH_SHORT
+                    )
+                        .show()
+                }
+            }
+        }
+    }
+
     override fun onMovieCLickListener(movie: Movie, position: Int) {
+
         val action =
             HomeFragmentDirections.actionHomeFragmentToMovieDetailFragment(
                 movie = movie

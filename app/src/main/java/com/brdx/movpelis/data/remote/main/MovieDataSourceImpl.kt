@@ -39,12 +39,12 @@ class MovieDataSourceImpl(
                 val output = jsonMovie.asJsonObject
 
                 val movie = Movie(
-                    id = output.get("id").asString,
+                    id = output.get("id").asString ?: "",
                     poster_path = "https://image.tmdb.org/t/p/w500" + output.get("poster_path").asString,
-                    title = output.get("title").asString,
-                    vote_average = output.get("vote_average").asDouble,
-                    release_date = output.get("release_date").asString,
-                    overview = output.get("overview").asString,
+                    title = output.get("title").asString ?: "",
+                    vote_average = output.get("vote_average").asDouble ?: 0.0,
+                    release_date = output.get("release_date").asString ?: "",
+                    overview = output.get("overview").asString ?: "",
                 )
 
                 movies.add(movie)

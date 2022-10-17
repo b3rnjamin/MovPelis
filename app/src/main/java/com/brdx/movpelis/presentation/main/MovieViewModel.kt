@@ -1,15 +1,18 @@
 package com.brdx.movpelis.presentation.main
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.liveData
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import com.brdx.movpelis.core.Resource
 import com.brdx.movpelis.data.model.Movie
 import com.brdx.movpelis.domain.main.MovieRepo
 import kotlinx.coroutines.Dispatchers
 
 class MovieViewModel(private val repo: MovieRepo) : ViewModel() {
+
+    val liveDataMovies = MutableLiveData<List<Movie>>(emptyList())
+
+    fun setDataMovies(list: List<Movie>){
+        liveDataMovies.value = list
+    }
 
     fun listMovies(page: Int) =
         liveData(viewModelScope.coroutineContext + Dispatchers.Main) {

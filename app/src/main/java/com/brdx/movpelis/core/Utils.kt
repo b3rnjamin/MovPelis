@@ -1,5 +1,6 @@
 package com.brdx.movpelis.core
 
+import android.view.View
 import com.brdx.movpelis.data.entity.MovieEntity
 import com.brdx.movpelis.data.model.Movie
 
@@ -29,4 +30,10 @@ object Utils {
         this.release_date,
         this.overview
     )
+
+    var View.visible: Boolean
+        get() = visibility == View.VISIBLE
+        set(value) {
+            visibility = if (value) View.VISIBLE else View.GONE
+        }
 }
