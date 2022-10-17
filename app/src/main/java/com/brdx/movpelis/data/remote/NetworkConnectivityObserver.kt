@@ -17,7 +17,10 @@ class NetworkConnectivityObserver(
         context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
     override fun observe(): Flow<ConnectivityObserver.Status> {
-        return callbackFlow {
+        return callbackFlow<ConnectivityObserver.Status> {
+
+            launch { send(ConnectivityObserver.Status.Unavailable) }
+
             val callback = object : ConnectivityManager.NetworkCallback() {
                 override fun onAvailable(network: Network) {
                     super.onAvailable(network)
@@ -36,6 +39,11 @@ class NetworkConnectivityObserver(
 
                 override fun onUnavailable() {
                     super.onUnavailable()
+                    launch { send(ConnectivityObserver.Status.Unavailable) }
+                }
+
+                override fun onBlockedStatusChanged(network: Network, blocked: Boolean) {
+                    super.onBlockedStatusChanged(network, blocked)
                     launch { send(ConnectivityObserver.Status.Unavailable) }
                 }
             }
